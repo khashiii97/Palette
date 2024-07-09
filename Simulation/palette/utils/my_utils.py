@@ -15,6 +15,7 @@ def load_data_tensor(fpath):
     train_X = train_X.view(train_X.size(0), 1, 2, -1)
     train_y = torch.from_numpy(train_y).type(torch.LongTensor)
 
+    print('Shape of tensors loaded:')
     print(train_X.shape, train_y.shape)
 
     return train_X, train_y
@@ -59,6 +60,7 @@ def load_data_npy(fpath):
 def get_PMF(dataset_dir, data_dict, set_num, tam_len):
     feature, label = load_data_npy(dataset_dir)
     arr = [[] for i in range(set_num)]
+    print('Number of labels for computing Pmf')
     print(len(label))
     for i in range(len(label)):
         index = int(label[i])
@@ -70,7 +72,7 @@ def get_PMF(dataset_dir, data_dict, set_num, tam_len):
     for i in range(len(arr)):
         trace_sum_res_upload = [0] * tam_len
         trace_sum_res_download = [0] * tam_len
-        print(len(arr[i]))
+        # print(len(arr[i]))
         for j in range(len(arr[i])):
             trace = feature[arr[i][j]]
 
@@ -94,3 +96,5 @@ def get_PMF(dataset_dir, data_dict, set_num, tam_len):
         trace_cum_res_download[i] = normalized_arr_download
 
     return trace_cum_res_upload, trace_cum_res_download
+
+

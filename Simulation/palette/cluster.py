@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import const
 from utils.my_utils import get_PMF
-
+from clustering_utils import plot_clusters_with_distance_matrix
 
 labels = [0] * const.MONITORED_SITE_NUM
 
@@ -26,12 +26,14 @@ def load_data(fpath):
     train = np.load(fpath, allow_pickle=True).item()
     train_X, train_y = train['dataset'], train['label']
 
+    print('The data loaded has shapes of:')
     print(train_X.shape, train_y.shape)
 
     return train_X, train_y
 
 
 def get_matrix(dataset_path):
+    # returns a list [s1, s2, ..., sn], where each si is the supermatrix of a website
     train_X_ori, train_y_ori = load_data(dataset_path)
 
     website_dict = getDict(train_X_ori, train_y_ori)
@@ -53,23 +55,25 @@ def update_matrix(matrix_1, matrix_2):
 
 
 def website_clustering(partition, super_matrices, k=5):
+    #will return partition_set and centers
     if len(partition) == 0:
         return [], []
 
     partition_set = []
-    centers = np.empty((0, 2, const.TAM_LENGTH), float)
+    centers = np.empty((0, 2, const.TAM_LENGTH), float) 
     partition = np.sort(partition)
-    tar_label = np.random.choice(partition, 1)[0]
+    tar_label = np.random.choice(partition, 1)[0] 
     visited = [0] * const.MONITORED_SITE_NUM
     visited[tar_label] = 1
     partition_set.append([tar_label])
     centers = np.append(centers, super_matrices[tar_label:tar_label + 1], axis=0)
-    node = 0
-    cnt = 1
+    node = 0 # number of anonimity sets formed
+    cnt = 1 # number of websites clustered
 
     while cnt < len(partition):
 
         if len(partition_set[node]) == k:
+            #finding the center for the next node
             if len(partition) - cnt < k:
                 break
             node += 1
@@ -149,6 +153,8 @@ if __name__ == '__main__':
     # mapping of website to anonymity set index
     website_to_set = {}
 
+
+
     # First step: build the super-matrix for each website using the corresponding traces
     super_matrices_websites = get_matrix(const.DATASET_PATH + const.TRAIN_DATA_FILE)
 
@@ -167,7 +173,7 @@ if __name__ == '__main__':
         partition_2 = []
 
         for anonymity_set, super_matrix in zip(anonymity_sets_fir, super_matrices_fir):
-            super_matrix = np.where(super_matrix == 0, 1, super_matrix)
+            super_matrix = np.where(super_matrix == 0, 1, super_matrix) # todo, find out why this is happening?
             for website in anonymity_set:
                 if len(partition_1) < len(partition_2):
                     partition_1.append(website)
@@ -192,7 +198,7 @@ if __name__ == '__main__':
 
         partition_1 = np.array(partition_1)
         partition_2 = np.array(partition_2)
-
+    print('Total sets obtained from clustering:')
     print(total_sets)
 
     for idx, anonymity_set in enumerate(total_sets):
@@ -201,12 +207,12 @@ if __name__ == '__main__':
                 website_to_set[website].append(idx)
             else:
                 website_to_set[website] = [idx]
-
+    print('The set(s) each website has been assigned to')
     print(website_to_set)
 
     # you can visualize the super-matrix of websites in each anonymity set
-    for per_set in total_sets:
-        draw_plot(super_matrices_websites, per_set, const.TAM_LENGTH)
+    # for per_set in total_sets:
+    #     draw_plot(super_matrices_websites, per_set, const.TAM_LENGTH)
 
     # PMF estimation
     PMF_upload, PMF_download = get_PMF(const.DATASET_PATH + const.TRAIN_DATA_FILE, website_to_set, len(total_sets),
@@ -239,3 +245,46 @@ if __name__ == '__main__':
     with open('website_to_set.json', 'w') as f:
         f.write(str(website_to_set))
 
+    #### computing distance matrix based on super matrixes
+    super_distance_matrix = np.zeros([95,95])
+    for i in range(95):
+        for j in range(95):
+            if j < i:
+                super_distance_matrix[i,j] = super_distance_matrix[j,i]
+            else:
+                super_distance_matrix[i,j] = np.linalg.norm(super_matrices_websites[i] - super_matrices_websites[j])
+
+
+
+
+
+
+    #### loading the distance matrix based on samples
+    sample_based_distance_marix = np.load('class-wise-distance/euc_0.08.npy')
+    
+
+    #### creating the clusters list like [0,5,21,1, ...]
+    clusters = [website_to_set[i][0] for i in range(95)]
+    clusters = np.array(clusters)
+    #### drawing the two boxplots and comparing them
+
+    # print(clusters)
+
+    # print(super_distance_matrix[:5,:5])
+    plot_title = 'Box plots on original Palette using super-matrices'
+    plot_clusters_with_distance_matrix(distance_matrix= super_distance_matrix,
+                                       clusters = clusters, 
+                                       k = 19,
+                                       text_title= plot_title,
+                                       sampling= False)
+
+
+    plot_title = 'Box plots on original Palette using sampling'
+    plot_clusters_with_distance_matrix(distance_matrix= sample_based_distance_marix,
+                                       clusters = clusters, 
+                                       k = 19,
+                                       text_title= plot_title,
+                                       sampling= True)
+
+
+    

@@ -1,4 +1,4 @@
-from Simulation.palette.const import *
+from palette.const import *
 
 def fun(times, sizes):
     feature = [[0 for _ in range(TAM_LENGTH)], [0 for _ in range(TAM_LENGTH)]]

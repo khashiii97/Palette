@@ -8,9 +8,9 @@ TIME_SLOT = CUTOFF_TIME / TAM_LENGTH
 
 # extract_list.py
 # traces path:
-TRACES_PATH = ''
+TRACES_PATH = 'datasets/Tik_Tok/'
 # output path: use the exact path to save the extracted .npy dataset or save to datasets/ by default
-OUTPUT_PATH = ''
+OUTPUT_PATH = 'outputs/'
 
 # dataset path: use the exact path or put the dataset in datasets/
 DATASET_PATH = 'datasets/'
@@ -26,6 +26,6 @@ TEST_DATA_FILE = 'Undefence-test-packets_per_slot.npy'
 '''
 ROUND = 1
 # anonymity set size
-SET_SIZE = 30
+SET_SIZE = 5
 
 

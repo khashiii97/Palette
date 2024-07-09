@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import tqdm
 import const
-
+import sys
 
 def parallel(para_list, n_jobs=10):
     pool = mp.Pool(n_jobs)
@@ -24,7 +24,7 @@ def extract_feature(para):
     seq = pd.Series(tcp_dump[:]).str.slice(0, -1).str.split('\t', expand=True).astype("float")
     times = np.array(seq.iloc[:, 0])
     length_seq = np.array(seq.iloc[:, 1]).astype("int")
-    fun = import_module('simulation.FeatureExtraction.' + feature_func)
+    fun = import_module('FeatureExtraction.' + feature_func)
     feature = fun.fun(times, length_seq)
     if '-' in file_name:
         label = file_name.split('-')
@@ -39,15 +39,16 @@ def process_dataset(file_name, suffix):
     output_dir = const.OUTPUT_PATH + defence + '-' + suffix + '-' + feature_func
 
     para_list = []
+    
     file = open(file_name, 'r', encoding='utf-8')
     lines = file.readlines()
-    for line in lines:
+    for idx,line in enumerate(lines):
         l = line.strip()
         if os.path.exists(traces_path + l):
             para_list.append((traces_path + l, feature_func))
 
     data_dict = {'dataset': [], 'label': []}
-
+    
     raw_data_dict = parallel(para_list, n_jobs=15)
 
     features, label = zip(*raw_data_dict)
@@ -66,6 +67,12 @@ def process_dataset(file_name, suffix):
 
 if __name__ == '__main__':
 
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+    sys.path.append(parent_dir)
+    
+
+    
     defence = 'Undefence'
     traces_path = const.TRACES_PATH         # TODO: change to your dataset path
 
